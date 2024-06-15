@@ -9,6 +9,8 @@ import (
 func (app *application) routes() http.Handler {
 	router := httprouter.New()
 
+	router.NotFound = http.HandlerFunc(app.notFoundResponse)
+
 	router.HandlerFunc(http.MethodGet, "/api/healthcheck", app.healthcheck)
 
 	// signUP
@@ -21,13 +23,13 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/api/auth/session", app.authenticate(app.validateTokenHandler))
 
 	// create a bound
-	router.HandlerFunc(http.MethodPost, "/api/bound", app.createBondHandler)
+	router.HandlerFunc(http.MethodPost, "/api/bond", app.authenticate(app.createBondHandler))
 	// buy a bound
-	router.HandlerFunc(http.MethodPut, "/api/bound/:id/buy", app.buyABondById)
-	// list bounds
-	router.HandlerFunc(http.MethodGet, "/api/bounds", app.listAllBonds)
+	// router.HandlerFunc(http.MethodPut, "/api/bound/:id/buy", app.buyABondById)
+	// // list bounds
+	// router.HandlerFunc(http.MethodGet, "/api/bounds", app.listAllBonds)
 
-	router.HandlerFunc(http.MethodGet, "/api/users/:id/bounds", app.listAllBondsCreatedByUser)
+	// router.HandlerFunc(http.MethodGet, "/api/users/:id/bounds", app.listAllBondsCreatedByUser)
 
 	return app.enableCors(router)
 }

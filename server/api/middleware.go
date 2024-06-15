@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"net/http"
+	"strings"
 
 	"boundsApp.victorinolavida/internal/data"
 )
@@ -29,31 +30,39 @@ func (app *application) enableCors(next http.Handler) http.Handler {
 func (app *application) authenticate(next http.HandlerFunc) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
+		var token string
+		token, err := app.getCookieByName(r, TokenName)
 
-		cookie, err := app.getCookieByName(r, TokenName)
-
-		if err != nil {
-			if errors.Is(err, http.ErrNoCookie) {
-				app.invalidCredentialsResponse(w, r)
-				return
-			}
+		if err != nil && !errors.Is(err, http.ErrNoCookie) {
 			app.serverErrorResponse(w, r, err)
 			return
 		}
 
-		claims := &CustomClaims{}
-		err = app.validateToken(cookie, claims)
+		if token == "" {
+			requestToken := r.Header.Get("Authorization")
 
-		if err != nil {
-
-			switch {
-			case errors.Is(err, ErrInvalidCredentials):
+			splitToken := strings.Split(requestToken, "Bearer ")
+			if len(splitToken) != 2 {
+				// at this point we know that the token is not in the cookie and not in the header
 				app.invalidCredentialsResponse(w, r)
 				return
-			default:
-				app.serverErrorResponse(w, r, err)
-				return
 			}
+			token = splitToken[1]
+		}
+
+		if token == "" {
+			app.invalidCredentialsResponse(w, r)
+			return
+		}
+
+		claims := &CustomClaims{}
+		err = app.validateToken(token, claims)
+
+		if err != nil && !errors.Is(err, http.ErrNoCookie) {
+
+			app.serverErrorResponse(w, r, err)
+			return
+
 		}
 
 		user, err := app.models.Users.GetByUsername(claims.Username)
