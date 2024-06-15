@@ -13,7 +13,8 @@ import (
 )
 
 type config struct {
-	port int
+	port   int
+	secret string
 }
 
 type application struct {
@@ -27,6 +28,7 @@ func main() {
 	var config config
 
 	flag.IntVar(&config.port, "port", 4000, "API server port")
+	flag.StringVar(&config.secret, "secret", "super_duper_secret", "JTW secret")
 
 	flag.Parse()
 
@@ -40,10 +42,11 @@ func main() {
 
 	defer db.Close()
 	logger.Info("database connection pool established")
+	models := data.NewModels(db)
 
 	app := &application{
 		config: config,
-		DB:     db,
+		models: models,
 		logger: logger,
 	}
 

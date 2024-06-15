@@ -2,7 +2,18 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
 	"net/http"
+	"strings"
+)
+
+type envelop map[string]any
+
+var TokenName = "__auth_token"
+var (
+	ErrInvalidValue = errors.New("invalid value")
 )
 
 func (app *application) WriteJson(w http.ResponseWriter, status int, data any) error {
@@ -27,9 +38,39 @@ func (app *application) ReadJson(w http.ResponseWriter, r *http.Request, destina
 
 	err := dec.Decode(destination)
 	if err != nil {
+		var syntaxError *json.SyntaxError
+		var marshalError *json.UnmarshalTypeError
 
-		return err
+		switch {
+		case errors.Is(err, syntaxError):
+			return errors.New("syntax error")
+		case errors.As(err, &marshalError):
+			if marshalError.Field != "" {
+				return fmt.Errorf("incorrect type for the field %s", marshalError.Field)
+			}
+			return fmt.Errorf("body contains incorrect JSON type (at character %d)", marshalError.Offset)
+		case strings.HasPrefix(err.Error(), "json: unknown field"):
+			field := strings.TrimPrefix(err.Error(), "json: unknown field")
+			return fmt.Errorf("body contains a unknown key %s", field)
+		case errors.Is(err, io.EOF):
+			return fmt.Errorf("body can not be empty")
+
+		default:
+			return err
+		}
+
 	}
 
 	return nil
+}
+
+func (app *application) getCookieByName(r *http.Request, name string) (string, error) {
+
+	cookie, err := r.Cookie(name)
+	if err != nil {
+		return "", err
+	}
+
+	// Return the decoded cookie value.
+	return string(cookie.Value), nil
 }

@@ -12,9 +12,13 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/api/healthcheck", app.healthcheck)
 
 	// signUP
-	router.HandlerFunc(http.MethodPost, "/api/join", app.registerUserHandler)
+	router.HandlerFunc(http.MethodPost, "/api/auth/join", app.registerUserHandler)
 	// login
-	router.HandlerFunc(http.MethodPost, "/api/login", app.loginUserHandler)
+	router.HandlerFunc(http.MethodPost, "/api/auth/login", app.loginUserHandler)
+	//logout
+	router.HandlerFunc(http.MethodPost, "/api/auth/logout", app.authenticate(app.logoutUserHandler))
+
+	router.HandlerFunc(http.MethodGet, "/api/auth/session", app.authenticate(app.validateTokenHandler))
 
 	// create a bound
 	router.HandlerFunc(http.MethodPost, "/api/bound", app.createBondHandler)
@@ -25,5 +29,5 @@ func (app *application) routes() http.Handler {
 
 	router.HandlerFunc(http.MethodGet, "/api/users/:id/bounds", app.listAllBondsCreatedByUser)
 
-	return router
+	return app.enableCors(router)
 }
