@@ -58,10 +58,15 @@ func (app *application) authenticate(next http.HandlerFunc) http.HandlerFunc {
 		claims := &CustomClaims{}
 		err = app.validateToken(token, claims)
 
-		if err != nil && !errors.Is(err, http.ErrNoCookie) {
-
-			app.serverErrorResponse(w, r, err)
-			return
+		if err != nil {
+			switch {
+			case errors.Is(err, ErrInvalidCredentials):
+				app.invalidCredentialsResponse(w, r)
+				return
+			default:
+				app.serverErrorResponse(w, r, err)
+				return
+			}
 
 		}
 

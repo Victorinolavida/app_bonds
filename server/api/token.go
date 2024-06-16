@@ -76,7 +76,15 @@ func (app *application) validateToken(tokenString string, claims *CustomClaims) 
 	})
 
 	if err != nil {
-		return err
+		switch {
+		case errors.Is(err, jwt.ErrSignatureInvalid):
+			return ErrInvalidCredentials
+		case errors.Is(err, jwt.ErrTokenExpired):
+			return ErrInvalidCredentials
+		default:
+			return err
+		}
+
 	}
 	if !token.Valid {
 		return ErrInvalidCredentials
