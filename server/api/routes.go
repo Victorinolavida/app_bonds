@@ -25,11 +25,11 @@ func (app *application) routes() http.Handler {
 	// create a bound
 	router.HandlerFunc(http.MethodPost, "/api/bond", app.authenticate(app.createBondHandler))
 	// buy a bound
-	// router.HandlerFunc(http.MethodPut, "/api/bound/:id/buy", app.buyABondById)
+	router.HandlerFunc(http.MethodPut, "/api/bound/:id/buy", app.authenticate(app.buyABondByIdHandler))
 	// // list bounds
-	// router.HandlerFunc(http.MethodGet, "/api/bounds", app.listAllBonds)
+	router.HandlerFunc(http.MethodGet, "/api/bounds", app.authenticate(app.listOwnedBondsLoggedUserHandler))
 
-	// router.HandlerFunc(http.MethodGet, "/api/users/:id/bounds", app.listAllBondsCreatedByUser)
+	// router.HandlerFunc(http.MethodGet, "/api/users/:id/bonds", app.listAllBondsOwnedByUserHandler)
 
 	return app.enableCors(router)
 }

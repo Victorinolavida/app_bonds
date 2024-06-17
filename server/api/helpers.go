@@ -7,13 +7,17 @@ import (
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/julienschmidt/httprouter"
 )
 
 type envelop map[string]any
 
 var TokenName = "__auth_token"
+
 var (
 	ErrInvalidValue = errors.New("invalid value")
+	ErrorNoParam    = errors.New("no param found")
 )
 
 func (app *application) WriteJson(w http.ResponseWriter, status int, data any) error {
@@ -73,4 +77,11 @@ func (app *application) getCookieByName(r *http.Request, name string) (string, e
 
 	// Return the decoded cookie value.
 	return string(cookie.Value), nil
+}
+
+func (app *application) readStringParamByName(r *http.Request, name string) string {
+	params := httprouter.ParamsFromContext(r.Context())
+	param := params.ByName(name)
+
+	return param
 }

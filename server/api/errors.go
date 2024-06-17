@@ -1,6 +1,8 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
+)
 
 func (app *application) logError(r *http.Request, err error) {
 	var (
@@ -48,4 +50,14 @@ func (app *application) invalidCredentialsResponse(w http.ResponseWriter, r *htt
 func (app *application) notFoundResponse(w http.ResponseWriter, r *http.Request) {
 	message := "resource not found"
 	app.errorResponse(w, r, http.StatusNotFound, message)
+}
+
+func (app *application) resourceNotFoundResponse(w http.ResponseWriter, r *http.Request) {
+	message := "resource not found"
+	app.errorResponse(w, r, http.StatusMethodNotAllowed, message)
+}
+
+func (app *application) bondAlreadyOwnedResponse(w http.ResponseWriter, r *http.Request) {
+	message := "bond already owned"
+	app.errorResponse(w, r, http.StatusConflict, message)
 }
