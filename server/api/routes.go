@@ -23,14 +23,15 @@ func (app *application) routes() http.Handler {
 	router.HandlerFunc(http.MethodGet, "/api/auth/session", app.authenticate(app.validateTokenHandler))
 
 	// create a bound
-	router.HandlerFunc(http.MethodPost, "/api/bond", app.authenticate(app.createBondHandler))
+	router.HandlerFunc(http.MethodPost, "/api/bonds", app.authenticate(app.createBondHandler))
 	// buy a bound
-	router.HandlerFunc(http.MethodPut, "/api/bound/:id/buy", app.authenticate(app.buyBondHandler))
+	router.HandlerFunc(http.MethodPut, "/api/bounds/:id/buy", app.authenticate(app.buyBondHandler))
+
 	// // list bounds owned by user
 	router.HandlerFunc(http.MethodGet, "/api/bonds", app.authenticate(app.listOwnedBondsLoggedUserHandler))
 
-	// list all bouds purchasable
-	router.HandlerFunc(http.MethodGet, "/api/bounds/purchasable", app.authenticate(app.listPurchasableBondsHandler))
+	// list all purchasable bounds
+	router.HandlerFunc(http.MethodGet, "/api/bonds/purchasable", app.authenticate(app.listPurchasableBondsHandler))
 
 	return app.enableCors(router)
 }

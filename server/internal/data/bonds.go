@@ -48,7 +48,6 @@ func validatePrice(v *validator.Validator, price Price) {
 	v.Check(price <= 100_000_000*10_000, "price", "must be less than or equal to 100,000,000")
 	v.Check(price >= 0, "price", "must be greater than or equal to 0")
 }
-
 func (m *BondModel) Insert(bond *Bond) error {
 	query := `INSERT INTO 
 	bonds (name, price, number_bonds, owner_id, created_by) 
@@ -61,6 +60,20 @@ func (m *BondModel) Insert(bond *Bond) error {
 	defer cancel()
 
 	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&bond.ID, &bond.CreatedAt)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+func (m *BondModel) ChangeOwner(bond *Bond, user *User) error {
+	query := `UPDATE bonds SET owner_id = $1 WHERE id = $2`
+	args := []any{user.ID, bond.ID}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	_, err := m.DB.ExecContext(ctx, query, args...)
 	if err != nil {
 		return err
 	}
@@ -109,7 +122,6 @@ func (m *BondModel) GetBondByID(bond *Bond) error {
 	query := `
 	SELECT id, name, price, number_bonds, created_at, owner_id FROM bonds
 	WHERE id = $1
-
 	`
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -128,74 +140,41 @@ func (m *BondModel) GetBondByID(bond *Bond) error {
 	return nil
 }
 
-func (m *BondModel) IsPurchasableBound(bond *Bond, user *User, transaction *Transaction) error {
-
+func (m *BondModel) GetAllAvailable(user *User, pagination Pagination) ([]*BondWithOwner, Pagination, error) {
 	query := `
-	SELECT transactions.buyer_id FROM bonds
-		LEFT JOIN transactions ON bonds.id = transactions.bond_id
-		WHERE (
-		(issuer_id <> $1 AND transactions.id is null) 
-		OR (transactions.buyer_id <> $1 AND transactions.deleted_at IS NULL)
-		) AND bonds.id= $2
-		
+	SELECT COUNT(*) OVER(), bonds.id, name, price, number_bonds, bonds.created_at, users.username as owner  FROM bonds
+	INNER JOIN users on bonds.owner_id = users.id
+	WHERE owner_id <> $1
+	ORDER BY created_at DESC
+	LIMIT $2 OFFSET $3
 	`
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	// var price float64
-	err := m.DB.QueryRowContext(ctx, query, user.ID, bond.ID).Scan(&transaction.SellerId)
+	args := []any{user.ID, pagination.limit(), pagination.offset()}
 
+	rows, err := m.DB.QueryContext(ctx, query, args...)
 	if err != nil {
-		switch {
-		case errors.Is(err, sql.ErrNoRows):
-			return ErrBoughtAlreadyBought
-		default:
-			return err
-		}
-	}
-
-	// decimalPrice := decimal.NewFromFloat(float64(price))
-	// bond.Price = Price(decimalPrice)
-
-	return nil
-
-}
-func (m *BondModel) GetPurchasable(user *User) ([]*BondWithOwner, error) {
-	query := `
-	SELECT id, name, price, number_bonds, bonds.created_at,  FROM bonds
-
-	`
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
-	defer cancel()
-
-	rows, err := m.DB.QueryContext(ctx, query, user.ID)
-	if err != nil {
-		switch {
-		case errors.Is(err, sql.ErrNoRows):
-			return []*BondWithOwner{}, nil
-		default:
-			return nil, err
-		}
+		return nil, Pagination{}, err
 	}
 
 	defer rows.Close()
 
 	bonds := []*BondWithOwner{}
+	totalRecords := 0
 
 	for rows.Next() {
 		var bond BondWithOwner
 		var price float64
-		err := rows.Scan(&bond.ID, &bond.Name, &price, &bond.NumberBonds, &bond.CreatedAt, &bond.Owner)
-
-		// decimalPrice := decimal.NewFromFloat(float64(price))
-		// bond.Price = Price(decimalPrice)
+		err := rows.Scan(&totalRecords, &bond.ID, &bond.Name, &price, &bond.NumberBonds, &bond.CreatedAt, &bond.Owner)
 
 		if err != nil {
-			return nil, err
+			return nil, Pagination{}, err
 		}
 
 		bonds = append(bonds, &bond)
 	}
 
-	return bonds, nil
+	paginationData := getPagination(totalRecords, pagination.CurrentPage, pagination.PageSize)
+	return bonds, paginationData, nil
 }

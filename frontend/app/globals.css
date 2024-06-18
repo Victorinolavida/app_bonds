@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  color: black;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+input {
+  @apply mb-1 block w-full appearance-none rounded border px-3 py-2 text-gray-700 shadow;
+}
+
+label {
+  @apply mb-2 block text-sm font-bold text-gray-700;
+}
+button:disabled {
+  @apply cursor-not-allowed opacity-50;
+}
+
+@layer component {
+  .app-content {
+    @apply mx-auto max-w-full p-2 pb-8 sm:pb-2 md:max-w-7xl md:p-4 lg:p-8;
+  }
+  .error {
+    @apply text-xs italic text-red-500;
+  }
+}

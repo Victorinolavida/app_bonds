@@ -48,13 +48,25 @@ func (app *application) createBondHandler(w http.ResponseWriter, r *http.Request
 }
 func (app *application) listPurchasableBondsHandler(w http.ResponseWriter, r *http.Request) {
 	user := app.contextGetUser(r)
-	bonds, err := app.models.Bonds.GetPurchasable(user)
+	var pagination data.Pagination
+	query := r.URL.Query()
+
+	v := validator.New()
+	pagination.CurrentPage = app.readIntParamByName(query, "page", 1, v)
+	pagination.PageSize = app.readIntParamByName(query, "page_size", 20, v)
+
+	if data.ValidatePagination(v, &pagination); !v.IsValid() {
+		app.fieldValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	bonds, paginationData, err := app.models.Bonds.GetAllAvailable(user, pagination)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
 	}
 
-	app.WriteJson(w, http.StatusOK, envelop{"bonds": bonds})
+	app.WriteJson(w, http.StatusOK, envelop{"bonds": bonds, "pagination": paginationData})
 }
 
 func (app *application) listOwnedBondsLoggedUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -112,22 +124,36 @@ func (app *application) buyBondHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = app.models.Transactions.IsAlreadyBought(bond, user)
+	// creating transaction
+	newTransaction := &data.Transaction{
+		SellerID: bond.OwnerId,
+		BuyerID:  user.ID,
+		Price:    bond.Price,
+	}
+
+	//inserting transaction
+
+	err = app.models.Transactions.Insert(newTransaction)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	bondTransaction := &data.BondTransaction{
+		BondID:        bond.ID,
+		TransactionID: newTransaction.ID,
+	}
+	err = app.models.BondTransaction.Insert(bondTransaction)
 
 	if err != nil {
-		switch {
-		case errors.Is(err, data.ErrBoughtAlreadyBought):
-			app.bondAlreadyOwnedResponse(w, r)
-			return
-		default:
-			app.serverErrorResponse(w, r, err)
-			return
-		}
+		app.serverErrorResponse(w, r, err)
+		return
 	}
-	newTransaction := &data.Transaction{
-		BondId:   bond.ID,
-		SellerId: bond.OwnerId,
-		BuyerID:  user.ID,
+
+	err = app.models.Bonds.ChangeOwner(bond, user)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
 	}
 
 	app.WriteJson(w, http.StatusOK, envelop{"transaction": newTransaction})
