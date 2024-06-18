@@ -1,3 +1,4 @@
+import { light } from '@mui/material/styles/createPalette';
 import type { Config } from 'tailwindcss';
 import colors from 'tailwindcss/colors';
 
@@ -18,7 +19,8 @@ const config: Config = {
         ...colors,
         primary: {
           DEFAULT: colors.indigo[950],
-          ligth: colors.indigo[800],
+          light: colors.indigo[800],
+          lighter: colors.indigo[400],
         },
       },
     },

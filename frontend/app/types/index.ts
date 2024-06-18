@@ -10,6 +10,9 @@ export type Bond = {
   number_bonds: number;
   status: 'CREATED'| 'BONDING';
 };
+export type BondWithOwner = Bond & {
+  owner:string 
+}
 
 export type Pagination = {
   current_page: number;

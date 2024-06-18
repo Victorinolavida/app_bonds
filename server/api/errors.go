@@ -48,12 +48,8 @@ func (app *application) invalidCredentialsResponse(w http.ResponseWriter, r *htt
 }
 
 func (app *application) notFoundResponse(w http.ResponseWriter, r *http.Request) {
-	message := "resource not found"
-	app.errorResponse(w, r, http.StatusNotFound, message)
-}
+	message := "the requested resource could not be found"
 
-func (app *application) resourceNotFoundResponse(w http.ResponseWriter, r *http.Request) {
-	message := "resource not found"
 	app.errorResponse(w, r, http.StatusMethodNotAllowed, message)
 }
 

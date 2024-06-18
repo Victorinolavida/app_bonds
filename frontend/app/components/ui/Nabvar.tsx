@@ -33,20 +33,15 @@ const Nabvar = () => {
     );
   return (
     <div className='h-15 bg-primary px-4 py-2 font-bold text-white'>
-      <nav className=''>
-        <ul className='flex items-center justify-between gap-4'>
-          <li>
+      <nav className='flex justify-between items-center'>
             <Link href='/'>
               <Heading level={1} className='!text-white'>
                 BondsApp
               </Heading>
             </Link>
-          </li>
+        <ul className='flex items-center justify-end'>
           <li>
-            <Link href={`/${user.username}/bonds`}>My bonds</Link>
-          </li>
-          <li>
-            <Link href={`/buy`}>Bonds</Link>
+            <ButtonLink href={`/buy`}>Bonds</ButtonLink>
           </li>
           <li>
             <Button onClick={() => logout()}>Logout</Button>

@@ -17,13 +17,6 @@ const validator = z.object({
 const RegisterPage = () => {
   const { register, user, error } = useContext(AuthenticationContext);
   const router = useRouter();
-
-  useEffect(() => {
-    if (user) {
-      router.push('/');
-    }
-  }, [user, router]);
-
   const initialValues = {
     username: 'Victorino',
     email: 'victorino4@mail.com',
@@ -72,7 +65,7 @@ const RegisterPage = () => {
               <div>
                 <p className='text-sm text-gray-500'>
                   Do you have an account?{' '}
-                  <Link href='/login' className='font-bold text-primary-ligth'>
+                  <Link href='/login' className='font-bold text-primary-light'>
                     login
                   </Link>
                 </p>

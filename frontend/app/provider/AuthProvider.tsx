@@ -9,8 +9,9 @@ import {
   validateSession,
 } from '../utils/api';
 import { User } from '../types';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { ErrorWithRequest } from '../utils/Error';
+import { Toaster } from 'sonner';
 
 export const AuthenticationContext = React.createContext<{
   login: (credentials: Record<string, unknown>) => void;
@@ -26,6 +27,7 @@ export const AuthenticationContext = React.createContext<{
   error: null,
 });
 
+const publicPages = ['/login', '/register', '/'];
 export default function AuthProvider({
   children,
 }: {
@@ -41,6 +43,7 @@ export default function AuthProvider({
   const [user, setUser] = React.useState<User | null>(null);
   const [error, setError] = React.useState<string | null>(null);
   const router = useRouter();
+  const path = usePathname();
 
   useEffect(() => {
     if (status === 'success' && !isFetching && data?.user) {
@@ -50,6 +53,15 @@ export default function AuthProvider({
       });
     }
   }, [data, status, isFetching]);
+
+  useEffect(() => {
+
+    if (user && publicPages.includes(path)) {
+      router.push('/');
+    }
+    
+
+  }, [user, path, router]);
 
   const login = function (data: Record<string, unknown>) {
     loginMutation.mutate(data, {
@@ -108,6 +120,7 @@ export default function AuthProvider({
     <AuthenticationContext.Provider
       value={{ user, login, logout, error, register }}
     >
+      <Toaster richColors position="top-right"/>
       {children}
     </AuthenticationContext.Provider>
   );

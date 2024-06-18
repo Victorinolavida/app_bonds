@@ -3,11 +3,13 @@
 import { useContext,  useState } from 'react';
 import { AuthenticationContext } from './provider/AuthProvider';
 import LandingPage from './components/LandingPage';
-import { useQuery } from '@tanstack/react-query';
-import { getUserOwnedBonds } from './utils/api';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { buyBond, getUserOwnedBonds } from './utils/api';
 import Table from './components/ui/Table';
 import { Pagination } from '@mui/material';
 import Heading from './components/ui/Heading';
+import Button from './components/ui/Button';
+import { formatMonetaryValue, formatNumericValue } from './utils/index';
 
 export default function Home({ children }: { children: React.ReactNode }) {
   const { user } = useContext(AuthenticationContext);
@@ -16,9 +18,9 @@ export default function Home({ children }: { children: React.ReactNode }) {
     queryKey: ['bonds', page],
     queryFn: getUserOwnedBonds,
     enabled: !!user,
-    staleTime: 1000 * 60 ,
-    
   });
+
+
   if (!user) return <LandingPage />;
   return (
     <main className='app-content w-full h-full'>
@@ -40,6 +42,7 @@ export default function Home({ children }: { children: React.ReactNode }) {
                 <tr>
                   <Table.Head>ID</Table.Head>
                   <Table.Head>Name</Table.Head>
+                  <Table.Head>Price</Table.Head>
                   <Table.Head>Currency</Table.Head>
                   <Table.Head>Number</Table.Head>
                   <Table.Head>Status</Table.Head>
@@ -50,9 +53,10 @@ export default function Home({ children }: { children: React.ReactNode }) {
                 data.bonds.map((bond) => (
                   <Table.Row key={bond.id}>
                     <Table.Data>{bond.id}</Table.Data>
-                    <Table.Data>{bond.price}</Table.Data>
+                    <Table.Data>{bond.name}</Table.Data>
+                    <Table.Data>{formatMonetaryValue(bond.price )}</Table.Data>
                     <Table.Data>{"MXN"}</Table.Data>
-                    <Table.Data>{bond.number_bonds}</Table.Data>
+                    <Table.Data>{formatNumericValue(bond.number_bonds)}</Table.Data>
                     <Table.Data>{bond.status}</Table.Data>
                     </Table.Row>
                 ))
@@ -72,12 +76,18 @@ export default function Home({ children }: { children: React.ReactNode }) {
             </div>
               )
       }
-        {
-          status === 'success' && data && data.bonds && data.bonds.length === 0 && (
-            <p>No bonds found</p>)
+       {
+        status === 'success' && data && data.bonds && data.bonds.length === 0 && (
+          <div className='border rounded-md border-primary bg-primary-lighter px-4 py-4'>
+            <p className='text-white'>
 
-        }
+You do not have any bonds yet.
+            </p>
+          </div>)
+
+  }
       </div>
 </main>
   );
 }
+  

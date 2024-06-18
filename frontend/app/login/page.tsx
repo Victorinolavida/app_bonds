@@ -14,15 +14,7 @@ const validator = z.object({
   password: z.string().nonempty(),
 });
 const LoginPage = () => {
-  const { login, user, error } = useContext(AuthenticationContext);
-  const router = useRouter();
-
-  useEffect(() => {
-    if (user) {
-      router.push('/');
-    }
-  }, [user, router]);
-
+  const { login, error } = useContext(AuthenticationContext);
   const initialValues = {
     email: 'victorino4@mail.com',
     password: 'hola1234567',
@@ -66,7 +58,7 @@ const LoginPage = () => {
                   Don&#39;t have an account yet?{' '}
                   <Link
                     href='/register'
-                    className='font-bold text-primary-ligth'
+                    className='font-bold text-primary-light'
                   >
                     Sign up
                   </Link>

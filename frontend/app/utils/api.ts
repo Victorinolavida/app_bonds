@@ -1,6 +1,6 @@
 'use client';
 
-import { Bond, Pagination } from '../types';
+import { Bond, BondWithOwner, Pagination } from '../types';
 import { API_URL } from '../utils/constants';
 import { ErrorWithRequest } from './Error';
 
@@ -102,6 +102,50 @@ export async function getUserOwnedBonds({queryKey}:{queryKey: [string, number]})
   return json as { bonds: Bond[], pagination: Pagination };
 }
 
+export async function getBondsAvailable({queryKey}:{queryKey: [string, number]}) {
+
+  const page = queryKey[1] || 1
+  const params = new URLSearchParams();
+  params.append('page', page.toString());
+
+  const res = await fetch(API_URL + '/bonds/purchasable?'+params.toString, {
+    method: 'GET',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+  const json = await res.json();
+  if (!res.ok) {
+    const json = await res.json();
+    const message = handleError(json);
+    throw new ErrorWithRequest(message, res.url);
+  }
+  return json as { bonds: BondWithOwner[], pagination: Pagination };
+}
+
+export async function buyBond(bondId: string) {
+
+  if (!bondId) {
+    throw new ErrorWithRequest('Bond id is required', '/bonds/${bondId}/buy');
+  }
+  console.log(`/bonds/${bondId}/buy`)
+ const res = await fetch(API_URL + `/bonds/${bondId}/buy`, {
+    method: 'PUT',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!res.ok) {
+    const json = await res.json();
+    const message = handleError(json);
+    throw new ErrorWithRequest(message, res.url);
+  }
+  return await res.json();
+}
+
 
 const handleError = function (json:Record<string, unknown>) {
   if (!json) {
@@ -120,3 +164,4 @@ const handleError = function (json:Record<string, unknown>) {
 
     return message;
 }
+

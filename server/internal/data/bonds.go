@@ -82,9 +82,10 @@ func (m *BondModel) ChangeOwner(bond *Bond, user *User) error {
 }
 func (m *BondModel) GetBondsByUser(user User, pagination Pagination) ([]*BondWithStatus, Pagination, error) {
 	query := `
-	SELECT COUNT(*) OVER(), id, name, price, number_bonds, owner_id, created_at, 
-		case when owner_id = created_by then 'CREATED' else 'BOUGHT' end as role
+	SELECT COUNT(*) OVER(), bonds.id, name, price, number_bonds, owner_id, created_at, 
+		case when owner_id = created_by AND bond_transaction.id IS NULL then 'CREATED' else 'BOUGHT' end as role
 	FROM bonds 
+	LEFT JOIN bond_transaction on bonds.id = bond_transaction.bond_id
 	WHERE owner_id = $1 
 	ORDER BY created_at DESC
 	LIMIT $2 OFFSET $3
@@ -165,8 +166,7 @@ func (m *BondModel) GetAllAvailable(user *User, pagination Pagination) ([]*BondW
 
 	for rows.Next() {
 		var bond BondWithOwner
-		var price float64
-		err := rows.Scan(&totalRecords, &bond.ID, &bond.Name, &price, &bond.NumberBonds, &bond.CreatedAt, &bond.Owner)
+		err := rows.Scan(&totalRecords, &bond.ID, &bond.Name, &bond.Price, &bond.NumberBonds, &bond.CreatedAt, &bond.Owner)
 
 		if err != nil {
 			return nil, Pagination{}, err

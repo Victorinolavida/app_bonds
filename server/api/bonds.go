@@ -112,7 +112,7 @@ func (app *application) buyBondHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
-			app.badRequestResponse(w, r, err)
+			app.badRequestResponse(w, r, errors.New("bond not found"))
 			return
 		default:
 			app.serverErrorResponse(w, r, err)
