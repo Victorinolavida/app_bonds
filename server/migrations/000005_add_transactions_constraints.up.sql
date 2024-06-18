@@ -1,3 +1,2 @@
 ALTER TABLE transactions ADD CONSTRAINT fk_seller_id FOREIGN KEY (seller_id) REFERENCES users(id) ON DELETE CASCADE;
 ALTER TABLE transactions ADD CONSTRAINT fk_buyer_id FOREIGN KEY (buyer_id) REFERENCES users(id) ON DELETE CASCADE;
-ALTER TABLE transactions ADD CONSTRAINT fk_bond_id FOREIGN KEY (bond_id) REFERENCES bonds(id) ON DELETE CASCADE;

@@ -6,8 +6,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"strconv"
 	"strings"
 
+	"boundsApp.victorinolavida/internal/validator"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -84,4 +87,19 @@ func (app *application) readStringParamByName(r *http.Request, name string) stri
 	param := params.ByName(name)
 
 	return param
+}
+
+func (app *application) readIntParamByName(qs url.Values, key string, defaultValue int, v *validator.Validator) int {
+	paramString := qs.Get(key)
+	if paramString == "" {
+		return defaultValue
+	}
+
+	i, err := strconv.Atoi(paramString)
+	if err != nil {
+		v.AddError(key, "must be a integer")
+		return defaultValue
+	}
+	return i
+
 }

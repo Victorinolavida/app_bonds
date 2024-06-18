@@ -1,0 +1,2 @@
+ALTER TABLE bond_transaction ADD CONSTRAINT fk_transaction_id FOREIGN KEY (transaction_id) REFERENCES transactions(id) ON DELETE CASCADE;
+ALTER TABLE bond_transaction ADD CONSTRAINT fk_bond_id FOREIGN KEY (bond_id) REFERENCES bonds(id) ON DELETE CASCADE;

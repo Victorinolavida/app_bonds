@@ -15,13 +15,20 @@ func (app *application) createBondHandler(w http.ResponseWriter, r *http.Request
 		NumberBonds int        `json:"number_bonds"`
 	}
 
-	app.ReadJson(w, r, &input)
+	err := app.ReadJson(w, r, &input)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
 	v := validator.New()
 
+	user := app.contextGetUser(r)
 	bond := &data.Bond{
 		Name:        input.Name,
 		Price:       input.Price,
 		NumberBonds: input.NumberBonds,
+		OwnerId:     user.ID,
+		CreatedBy:   user.ID,
 	}
 
 	data.ValidateBond(v, bond)
@@ -31,23 +38,42 @@ func (app *application) createBondHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	user := app.contextGetUser(r)
-
-	newBond, err := app.models.Bonds.Insert(bond, user)
+	err = app.models.Bonds.Insert(bond)
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
 		return
 	}
 
-	app.WriteJson(w, http.StatusOK, envelop{"bond": newBond})
+	app.WriteJson(w, http.StatusOK, envelop{"bond": bond})
 }
-func (app *application) listOwnedBondsLoggedUserHandler2(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("list all bounds"))
+func (app *application) listPurchasableBondsHandler(w http.ResponseWriter, r *http.Request) {
+	user := app.contextGetUser(r)
+	bonds, err := app.models.Bonds.GetPurchasable(user)
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	app.WriteJson(w, http.StatusOK, envelop{"bonds": bonds})
 }
 
 func (app *application) listOwnedBondsLoggedUserHandler(w http.ResponseWriter, r *http.Request) {
 	user := app.contextGetUser(r)
-	bonds, err := app.models.Bonds.GetBondsByUser(*user)
+	query := r.URL.Query()
+	var input struct {
+		data.Pagination
+	}
+	v := validator.New()
+
+	input.CurrentPage = app.readIntParamByName(query, "page", 1, v)
+	input.PageSize = app.readIntParamByName(query, "page_size", 20, v)
+
+	if data.ValidatePagination(v, &input.Pagination); !v.IsValid() {
+		app.fieldValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	bonds, pagination, err := app.models.Bonds.GetBondsByUser(*user, input.Pagination)
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrRecordNotFound):
@@ -57,9 +83,9 @@ func (app *application) listOwnedBondsLoggedUserHandler(w http.ResponseWriter, r
 			return
 		}
 	}
-	app.WriteJson(w, http.StatusOK, envelop{"bonds": bonds})
+	app.WriteJson(w, http.StatusOK, envelop{"bonds": bonds, "pagination": pagination})
 }
-func (app *application) buyABondByIdHandler(w http.ResponseWriter, r *http.Request) {
+func (app *application) buyBondHandler(w http.ResponseWriter, r *http.Request) {
 	bondId := app.readStringParamByName(r, "id")
 	user := app.contextGetUser(r)
 	if bondId == "" {
@@ -68,10 +94,6 @@ func (app *application) buyABondByIdHandler(w http.ResponseWriter, r *http.Reque
 	}
 
 	bond := &data.Bond{ID: bondId}
-	transaction := &data.Transaction{
-		BondId:  bond.ID,
-		BuyerID: user.ID,
-	}
 
 	err := app.models.Bonds.GetBondByID(bond)
 
@@ -85,8 +107,13 @@ func (app *application) buyABondByIdHandler(w http.ResponseWriter, r *http.Reque
 			return
 		}
 	}
+	if bond.OwnerId == user.ID {
+		app.bondAlreadyOwnedResponse(w, r)
+		return
+	}
 
-	err = app.models.Bonds.IsPurchasableBound(bond, user, transaction)
+	err = app.models.Transactions.IsAlreadyBought(bond, user)
+
 	if err != nil {
 		switch {
 		case errors.Is(err, data.ErrBoughtAlreadyBought):
@@ -97,11 +124,10 @@ func (app *application) buyABondByIdHandler(w http.ResponseWriter, r *http.Reque
 			return
 		}
 	}
-
-	newTransaction, error := app.models.Transactions.Insert(transaction)
-	if error != nil {
-		app.serverErrorResponse(w, r, error)
-		return
+	newTransaction := &data.Transaction{
+		BondId:   bond.ID,
+		SellerId: bond.OwnerId,
+		BuyerID:  user.ID,
 	}
 
 	app.WriteJson(w, http.StatusOK, envelop{"transaction": newTransaction})

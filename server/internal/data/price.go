@@ -6,9 +6,9 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-type Price decimal.Decimal
+type Price int64
 
-var ErrorInvalidPrice = errors.New("invalid price")
+var ErrorInvalidPrice = errors.New("must be granter than or equal to 0")
 
 func (p *Price) UnmarshalJSON(data []byte) error {
 	if string(data) == "null" || string(data) == "" {
@@ -19,16 +19,13 @@ func (p *Price) UnmarshalJSON(data []byte) error {
 	if err != nil {
 		return err
 	}
+	intValue := dec.Round(4).Mul(decimal.NewFromInt(10000)).IntPart()
 
-	*p = Price(dec.Round(4))
+	*p = Price(intValue)
 	return nil
 }
 
 func (p *Price) MarshalJSON() ([]byte, error) {
-	strValue := decimal.Decimal(*p).StringFixed(4)
-	return []byte(strValue), nil
-}
-
-func (p *Price) Value() string {
-	return decimal.Decimal(*p).StringFixed(4)
+	dec := decimal.NewFromInt(int64(*p)).Div(decimal.NewFromInt(10000)).StringFixed(4)
+	return []byte(dec), nil
 }
