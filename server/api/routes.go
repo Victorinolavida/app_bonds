@@ -33,5 +33,5 @@ func (app *application) routes() http.Handler {
 	// list all purchasable bounds
 	router.HandlerFunc(http.MethodGet, "/api/bonds/purchasable", app.authenticate(app.listPurchasableBondsHandler))
 
-	return app.enableCors(router)
+	return app.enableCors(app.rateLimit(router))
 }

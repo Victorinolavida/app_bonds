@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"boundsApp.victorinolavida/internal/data"
+	"golang.org/x/time/rate"
 )
 
 func (app *application) enableCors(next http.Handler) http.Handler {
@@ -86,4 +87,21 @@ func (app *application) authenticate(next http.HandlerFunc) http.HandlerFunc {
 		next.ServeHTTP(w, r)
 	}
 
+}
+
+func (app *application) rateLimit(next http.Handler) http.Handler {
+	limitPerMinute := float64(app.config.rateLimit.limit) / 60
+	limiter := rate.NewLimiter(rate.Limit(limitPerMinute), app.config.rateLimit.limit)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if app.config.rateLimit.enable {
+			// rate limit logic goes here
+
+			if !limiter.Allow() {
+				app.rateLimitExceededResponse(w, r)
+				return
+			}
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }

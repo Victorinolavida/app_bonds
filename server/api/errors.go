@@ -57,3 +57,8 @@ func (app *application) bondAlreadyOwnedResponse(w http.ResponseWriter, r *http.
 	message := "bond already owned"
 	app.errorResponse(w, r, http.StatusConflict, message)
 }
+
+func (app *application) rateLimitExceededResponse(w http.ResponseWriter, r *http.Request) {
+	message := "rate limit exceeded"
+	app.errorResponse(w, r, http.StatusTooManyRequests, message)
+}

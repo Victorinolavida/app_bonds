@@ -12,9 +12,15 @@ import (
 	_ "github.com/lib/pq"
 )
 
+type rateLimit struct {
+	enable bool
+	limit  int
+}
 type config struct {
-	port   int
-	secret string
+	port      int
+	dsn       string
+	secret    string
+	rateLimit rateLimit
 }
 
 type application struct {
@@ -28,13 +34,16 @@ func main() {
 	var config config
 
 	flag.IntVar(&config.port, "port", 4000, "API server port")
+	flag.StringVar(&config.dsn, "dsn", "postgres://postgres:postgres@localhost/bonds?sslmode=disable", "Postgres connection string")
 	flag.StringVar(&config.secret, "secret", "super_duper_secret", "JTW secret")
+	flag.BoolVar(&config.rateLimit.enable, "limiter-enable", true, "Enable rate limit")
+	flag.IntVar(&config.rateLimit.limit, "limiter-request-min", 1000, "Rate limit per minute")
 
 	flag.Parse()
 
 	logger := slog.New(slog.NewTextHandler(os.Stdout, nil))
 
-	db, err := ConnectDB()
+	db, err := ConnectDB(config)
 	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)
@@ -65,8 +74,8 @@ func main() {
 	}
 }
 
-func ConnectDB() (*sql.DB, error) {
-	db, err := sql.Open("postgres", "postgres://postgres:postgres@localhost/bonds?sslmode=disable")
+func ConnectDB(conf config) (*sql.DB, error) {
+	db, err := sql.Open("postgres", conf.dsn)
 	if err != nil {
 		return nil, err
 	}
