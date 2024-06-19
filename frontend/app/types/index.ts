@@ -8,15 +8,15 @@ export type Bond = {
   name: string;
   price: number;
   number_bonds: number;
-  status: 'CREATED'| 'BONDING';
+  status: 'CREATED' | 'BONDING';
 };
 export type BondWithOwner = Bond & {
-  owner:string 
-}
+  owner: string;
+};
 
 export type Pagination = {
   current_page: number;
   page_size: number;
   last_page?: number;
   total_records: number;
-}
+};

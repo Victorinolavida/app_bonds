@@ -9,9 +9,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div>
       <Nabvar />
-        <div className='flex flex-col gap-4 w-full h-full'>
-          {children}
-      </div>
+      <div className='flex h-full w-full flex-col gap-4'>{children}</div>
     </div>
   );
 };

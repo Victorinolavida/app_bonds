@@ -23,9 +23,10 @@ const FormValidated = ({
     <Formik
       initialValues={initialValues}
       validate={toFormikValidate(validator)}
-      onSubmit={(values, { setSubmitting }) => {
+      onSubmit={(values, { setSubmitting, resetForm }) => {
         onSubmit(values);
         setSubmitting(false);
+        resetForm();
       }}
     >
       {() => (

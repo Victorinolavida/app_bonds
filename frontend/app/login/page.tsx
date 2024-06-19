@@ -16,8 +16,8 @@ const validator = z.object({
 const LoginPage = () => {
   const { login, error } = useContext(AuthenticationContext);
   const initialValues = {
-    email: 'victorino4@mail.com',
-    password: 'hola1234567',
+    email: '',
+    password: '',
   };
   return (
     <div className='app-content h-screen'>

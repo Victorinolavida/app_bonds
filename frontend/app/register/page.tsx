@@ -18,9 +18,9 @@ const RegisterPage = () => {
   const { register, user, error } = useContext(AuthenticationContext);
   const router = useRouter();
   const initialValues = {
-    username: 'Victorino',
-    email: 'victorino4@mail.com',
-    password: 'hola1234567',
+    username: '',
+    email: '',
+    password: '',
   };
   return (
     <div className='app-content h-screen'>

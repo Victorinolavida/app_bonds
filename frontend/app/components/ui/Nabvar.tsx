@@ -5,6 +5,7 @@ import Heading from './Heading';
 import Link from 'next/link';
 import ButtonLink from './ButtonLink';
 import { usePathname, useRouter } from 'next/navigation';
+import classNames from 'classnames';
 
 const Nabvar = () => {
   const { user, logout } = React.useContext(AuthenticationContext);
@@ -33,20 +34,30 @@ const Nabvar = () => {
     );
   return (
     <div className='h-15 bg-primary px-4 py-2 font-bold text-white'>
-      <nav className='flex justify-between items-center'>
-            <Link href='/'>
-              <Heading level={1} className='!text-white'>
-                BondsApp
-              </Heading>
-            </Link>
+      <nav className='flex items-center justify-between'>
+        <Link href='/'>
+          <Heading level={1} className='!text-white'>
+            BondsApp
+          </Heading>
+        </Link>
         <ul className='flex items-center justify-end'>
           <li>
-            <ButtonLink href={`/buy`}>Bonds</ButtonLink>
+            <ButtonLink href='/'
+              className={classNames({
+              
+                '!bg-blue-500': path === '/',
+            })}
+            >My bonds</ButtonLink>
           </li>
           <li>
-            <Button onClick={() => logout()}>Logout</Button>
+              <ButtonLink href={`/buy`}
+              className={classNames({
+                '!bg-blue-500': path === '/buy',
+            })}
+            >Bonds</ButtonLink>
           </li>
         </ul>
+          <Button color='red' onClick={() => logout()}>Logout</Button>
       </nav>
     </div>
   );

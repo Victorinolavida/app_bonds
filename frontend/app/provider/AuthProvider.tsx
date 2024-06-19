@@ -55,12 +55,9 @@ export default function AuthProvider({
   }, [data, status, isFetching]);
 
   useEffect(() => {
-
     if (user && publicPages.includes(path)) {
       router.push('/');
     }
-    
-
   }, [user, path, router]);
 
   const login = function (data: Record<string, unknown>) {
@@ -120,7 +117,7 @@ export default function AuthProvider({
     <AuthenticationContext.Provider
       value={{ user, login, logout, error, register }}
     >
-      <Toaster richColors position="top-right"/>
+      <Toaster richColors position='top-right' />
       {children}
     </AuthenticationContext.Provider>
   );

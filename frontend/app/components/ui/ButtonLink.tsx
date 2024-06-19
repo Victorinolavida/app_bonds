@@ -56,7 +56,11 @@ const ButtonLink = ({
       break;
   }
   return (
-    <Link href={href} className={classNames(className, styling, '!inline-block')} {...props}>
+    <Link
+      href={href}
+      className={classNames(className, styling, '!inline-block')}
+      {...props}
+    >
       {children}
     </Link>
   );

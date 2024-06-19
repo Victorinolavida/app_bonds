@@ -53,7 +53,10 @@ const Button = ({
       break;
   }
   return (
-    <button className={classNames(className, styling, '!inline-block')} {...props}>
+    <button
+      className={classNames(className, styling, '!inline-block')}
+      {...props}
+    >
       {children}
     </button>
   );
